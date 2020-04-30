@@ -1,1 +1,0 @@
-type Board = Array(3,3) of Player & { Empty } type Input = Position initialBoard : Board initialBoard ! (x, y) = Empty
