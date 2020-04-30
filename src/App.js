@@ -15,6 +15,25 @@ import Examples from './Examples';
 
 class App extends React.Component{
 
+  constructor(props){
+    super(props);
+    this.state = {
+      greeting: ''
+    };
+
+    // Simple POST request with a JSON body using fetch
+    fetch('/api/compile', {
+      method: 'POST',
+      headers:  {  
+                  'Accept': 'application/json, text/plain, */*',
+                  'Content-Type': 'application/json' 
+                },
+      body: JSON.stringify({ code: "type Board = Array(3,3) of Player & { Empty } type Input = Position initialBoard : Board initialBoard ! (x, y) = Empty" })
+    })
+        .then(response => response.json())
+        .then(data => this.setState(data));
+  }
+
   render(){
     return (
       <Router>
@@ -23,6 +42,7 @@ class App extends React.Component{
 
           {/* A <Switch> looks through its children <Route>s and
               renders the first one that matches the current URL. */}
+          <p>{this.state.greeting}</p>
           <Switch>
             <Route path="/editor">
               <CodeEditor/>
