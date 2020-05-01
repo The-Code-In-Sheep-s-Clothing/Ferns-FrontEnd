@@ -7,14 +7,15 @@ import 'prismjs/components/prism-clike';
 import 'prismjs/components/prism-javascript';
 import 'prismjs/components/prism-haskell';
 import 'prismjs/themes/prism-dark.css'
-import Button from '@material-ui/core/Button';
+import { Button, Box } from '@material-ui/core';
+import Terminal from 'terminal-in-react';
+import io from "socket.io-client";
 
-const code = `
-  type Board = Array(3,3) of Player & { Empty }
-  type Input = Position
+const code = `type Board = Array(3,3) of Player & { Empty }
+type Input = Position
 
-  initialBoard : Board
-  initialBoard ! (x, y) = Empty
+initialBoard : Board
+initialBoard ! (x, y) = Empty
 `;
 
 class CodeEditor extends React.Component{
@@ -27,6 +28,21 @@ class CodeEditor extends React.Component{
       greeting: ''
     };
 
+    this.compile = this.compile.bind(this);
+
+    this.textRef = React.createRef();
+    
+    var socket = io();
+    socket.emit('data', "asdf");
+    console.log(socket);
+    socket.on('data', function(msg){
+      alert(msg);
+      this.setState({greeting: this.state.greeting + msg});
+      console.log("asdf");
+    });
+  }
+
+  compile() {
     // Simple POST request with a JSON body using fetch
     fetch('/api/compile', {
       method: 'POST',
@@ -34,15 +50,17 @@ class CodeEditor extends React.Component{
                   'Accept': 'application/json, text/plain, */*',
                   'Content-Type': 'application/json' 
                 },
-      body: JSON.stringify({ code: code })
+      body: JSON.stringify({ code: this.state.code })
     })
         .then(response => response.json())
-        .then(data => this.setState(data));
+        .then(data => {
+          this.setState(data);
+        });
   }
 
   render(){
     return (
-      <div>
+      <Box>
         <Editor
           value={this.state.code}
           onValueChange={code => this.setState({ code })}
@@ -53,7 +71,17 @@ class CodeEditor extends React.Component{
             fontSize: 12,
           }}
         />
-      </div>
+        <Button variant="contained" onClick={this.compile}>Run</Button>
+        <p>{this.state.greeting}</p>
+        <Terminal
+          color='white'
+          backgroundColor='black'
+          hideTopBar={true}
+          allowTabs={false}
+          commandPassThrough={cmd => `-PassedThrough:${cmd}: command not found`}
+          msg=''
+        />
+      </Box>
     );
   }
 }
