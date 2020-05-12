@@ -8,7 +8,7 @@ import 'prismjs/components/prism-javascript';
 import 'prismjs/components/prism-haskell';
 import 'prismjs/themes/prism-dark.css'
 import { Button, Box } from '@material-ui/core';
-import Terminal from 'terminal-in-react';
+import Terminal from './Terminal.js';
 import io from "socket.io-client";
 
 const code = `type Board = Array(3,3) of Player & { Empty }
@@ -81,14 +81,7 @@ class CodeEditor extends React.Component{
         <Button variant="contained" onClick={this.compile}>Run</Button>
         <Button variant="contained" onClick={this.ping}>Ping Server</Button>
         <p>{this.state.greeting}</p>
-        <Terminal
-          color='white'
-          backgroundColor='black'
-          hideTopBar={true}
-          allowTabs={false}
-          commandPassThrough={cmd => `-PassedThrough:${cmd}: command not found`}
-          msg=''
-        />
+        <Terminal submit={(input)=>{return "1233";}}/>
       </Box>
     );
   }
