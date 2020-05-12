@@ -18,24 +18,26 @@ initialBoard : Board
 initialBoard ! (x, y) = Empty
 `;
 
+const socket = io();
+
 class CodeEditor extends React.Component{
 
   constructor(props){
     super(props);
 
+    this.compile = this.compile.bind(this);
+    this.ping = this.ping.bind(this);
+
+
+
     this.state = {
       code: code,
       greeting: ''
     };
+  }
 
-    this.compile = this.compile.bind(this);
-
-    this.textRef = React.createRef();
-    
-    var socket = io();
-    socket.emit('data', "asdf");
-    console.log(socket);
-    socket.on('data', function(msg){
+  componentDidMount() {
+    socket.on("data", msg => {
       alert(msg);
       this.setState({greeting: this.state.greeting + msg});
       console.log("asdf");
@@ -58,6 +60,11 @@ class CodeEditor extends React.Component{
         });
   }
 
+  ping() {
+    console.log(socket);
+    socket.emit('data', "asdf");
+  }
+
   render(){
     return (
       <Box>
@@ -72,6 +79,7 @@ class CodeEditor extends React.Component{
           }}
         />
         <Button variant="contained" onClick={this.compile}>Run</Button>
+        <Button variant="contained" onClick={this.ping}>Ping Server</Button>
         <p>{this.state.greeting}</p>
         <Terminal
           color='white'

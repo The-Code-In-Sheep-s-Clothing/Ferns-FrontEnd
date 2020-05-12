@@ -44,7 +44,7 @@ app.post('/api/compile', function (req, res) {
   }
 });
 
-io.on('connection', (socket) => {
+io.on("connection", (socket) => {
   let id = '_3oR4aJVi';
   
   console.log("a user connected");
@@ -63,13 +63,13 @@ io.on('connection', (socket) => {
     socket.broadcast.emit('data', 'Program Terminated');
   });*/
 
-  socket.on('data', (msg) => {
+  socket.on("data", (msg) => {
     console.log("asdfsadf");
-    socket.broadcast.emit('data', "asdf");
+    socket.emit("data", "asdf");
   });
   
-  socket.on('disconnect', () => {
-    console.log('user disconnected');
+  socket.on("disconnect", () => {
+    console.log("user disconnected");
   });
 });
 
