@@ -1,6 +1,6 @@
 const express = require('express');
 const bodyParser = require('body-parser');
-const { exec } = require("child_process");
+const { exec, spawn } = require("child_process");
 const pino = require('express-pino-logger')();
 var fs = require('fs');
 const shortid = require('shortid');
@@ -19,56 +19,72 @@ app.post('/api/compile', function (req, res) {
     let currentFile = shortid.generate();
     exec(`mkdir compiled/${currentFile}`, (error, stdout, stderr) => {
       //report errors
-      if (error) { res.send(JSON.stringify({ greeting: `error: ${error.message}` })); return; }
-      if (stderr) { res.send(JSON.stringify({ greeting: `stderr: ${stderr}` })); return; }
+      if (error) { res.send(JSON.stringify({ error: `error: ${error.message}` })); return; }
+      if (stderr) { res.send(JSON.stringify({ error: `stderr: ${stderr}` })); return; }
 
       fs.writeFile(`compiled/${currentFile}/code.bgl`, req.body.code, function (err) {
-        if (err) { res.send(JSON.stringify({ greeting: `error: ${err}` })); return; }
+        if (err) { res.send(JSON.stringify({ error: `error: ${err}` })); return; }
       }); 
-
-
 
       exec(`cd BottomUp/ && cabal new-exec BottomUp ../compiled/${currentFile}/code.bgl ; cp Output* ../compiled/${currentFile}/ ;  cd ..`, (error, stdout, stderr) => {    
         //report errors
-        if (error) { res.send(JSON.stringify({ greeting: `error: ${error.message}` })); return; }
-        if (stderr) { res.send(JSON.stringify({ greeting: `stderr: ${stderr}` })); return; }
-        if (stdout) { res.send(JSON.stringify({ greeting: `stdout: ${stdout}` })); return; }
+        if (error) { res.send(JSON.stringify({ error: `error: ${error.message}` })); return; }
+        if (stderr) { res.send(JSON.stringify({ error: `stderr: ${stderr}` })); return; }
+        if (stdout) { res.send(JSON.stringify({ error: `stdout: ${stdout}` })); return; }
 
-        res.status(201).send(JSON.stringify({ greeting:`id: ${currentFile}` }));
+        res.status(201).send(JSON.stringify({ programID:`${currentFile}` }));
       });
     });
   } else {
     res.status(400).send({
-      greeting: "Missing code body" + JSON.stringify(req.body)
+      error: "Missing code body" + JSON.stringify(req.body)
     });
   }
 });
 
-io.on("connection", (socket) => {
-  let id = '_3oR4aJVi';
-  
+io.on("connection", (socket) => {  
   console.log("a user connected");
-  //var proc = spawn(`ghci`, [`${id}/OutputCode.hs`]);
-
-
-  /*proc.stdout.on('data', (data) => {
-    socket.broadcast.emit('data', data.toString());
-  });
-  
-  proc.stderr.on('data', (data) => {
-    socket.broadcast.emit('data', data.toString());
-  });
-  
-  proc.on('exit', (code) => {
-    socket.broadcast.emit('data', 'Program Terminated');
-  });*/
+  var proc = null;
 
   socket.on("data", (msg) => {
-    console.log("asdfsadf");
-    socket.emit("data", "asdf");
+    if(proc){
+      proc.stdin.write(msg + "\n", ()=>{});
+    }
+    else{
+      socket.emit('data', "No program running -- please run a program before sending commands\n");
+    }
+  });
+
+  socket.on("id", (id) => {
+    console.log(JSON.stringify(id));
+    if(proc){
+      proc.kill();
+    }
+    if(!(fs.existsSync(`compiled/${id}`)) || id == ""){
+      socket.emit('data', "Not a valid Program ID\n");
+      return;
+    }
+    proc = spawn('ghci', ['OutputCode.hs'], {cwd: `compiled/${id}`});
+    setTimeout(function(){ if(proc) proc.kill()}, 3600000);
+  
+    proc.stdout.on('data', (data) => {
+      socket.emit('data', data.toString());
+    });
+    
+    proc.stderr.on('data', (data) => {
+      socket.emit('data', data.toString());
+    });
+    
+    proc.on('exit', (code) => {
+      socket.emit('data', 'Process was terminated\n');
+      socket.disconnect();
+    });
   });
   
   socket.on("disconnect", () => {
+    if(proc){
+      proc.kill();
+    }
     console.log("user disconnected");
   });
 });

@@ -13,6 +13,19 @@ class Terminal extends React.Component{
 
         this.handleChange = this.handleChange.bind(this);
         this.handleSubmit = this.handleSubmit.bind(this);
+
+        props.socket.on("data", msg => {
+            const[first, ...rest] = msg.split("\n");
+            var textList = this.state.terminalText;
+            textList[textList.length - 1] += first;
+            this.setState({terminalText: textList.concat(rest)});
+            this.scrollToBottom();
+        });
+
+        props.socket.on("disconnect", () => {
+            this.setState({terminalText: this.state.terminalText.concat(["Disconnected from Server", ""])});
+            this.scrollToBottom();
+        });
     }
 
     handleChange(event) {
@@ -21,7 +34,7 @@ class Terminal extends React.Component{
 
     handleSubmit(event){
         if(this.props.submit){
-            this.setState({terminalText: this.state.terminalText.concat([this.props.submit(this.state.command)])});
+            this.setState({terminalText: this.state.terminalText.concat([this.props.submit(this.state.command), ""])});
         }
         this.setState({command: ""});
         event.preventDefault();
@@ -32,13 +45,16 @@ class Terminal extends React.Component{
         padding: 0
     }
 
-    render(){
+    scrollToBottom = () => {
+        this.messagesEnd.scrollIntoView();
+    }
 
+    render(){
         return (
             <Box>
                 <form noValidate autoComplete="off" onSubmit={this.handleSubmit}>
                     <Box height={400}>
-                        <List dense={true}>
+                        <List dense={true} style={{maxHeight:350, overflow: 'auto'}}>
                             {this.state.terminalText.map((item, index) => (
                                 <ListItem key={index} style={this.removespacing}>
                                     <ListItemText 
@@ -47,6 +63,9 @@ class Terminal extends React.Component{
                                     />
                                 </ListItem>
                             ))}
+                            <div style={{ float:"left", clear: "both" }}
+                                ref={(el) => { this.messagesEnd = el; }}>
+                            </div>
                         </List>
                     </Box>
                     <TextField label="Command" onChange={this.handleChange} value={this.state.command}></TextField>

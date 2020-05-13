@@ -7,7 +7,7 @@ import 'prismjs/components/prism-clike';
 import 'prismjs/components/prism-javascript';
 import 'prismjs/components/prism-haskell';
 import 'prismjs/themes/prism-dark.css'
-import { Button, Box } from '@material-ui/core';
+import { Button, Box, TextField } from '@material-ui/core';
 import Terminal from './Terminal.js';
 import io from "socket.io-client";
 
@@ -18,7 +18,7 @@ initialBoard : Board
 initialBoard ! (x, y) = Empty
 `;
 
-const socket = io();
+var socket = io();
 
 class CodeEditor extends React.Component{
 
@@ -28,19 +28,19 @@ class CodeEditor extends React.Component{
     this.compile = this.compile.bind(this);
     this.ping = this.ping.bind(this);
 
+    this.terminalRef = React.createRef();
 
 
     this.state = {
       code: code,
-      greeting: ''
+      error: '',
+      programID: ''
     };
-  }
 
-  componentDidMount() {
-    socket.on("data", msg => {
-      alert(msg);
-      this.setState({greeting: this.state.greeting + msg});
-      console.log("asdf");
+    this.handleChange = this.handleChange.bind(this);
+
+    socket.on("disconnect", () => {
+      socket.connect({forceNew: true});
     });
   }
 
@@ -60,9 +60,12 @@ class CodeEditor extends React.Component{
         });
   }
 
+  handleChange(event) {
+      this.setState({programID: event.target.value});
+  }
+
   ping() {
-    console.log(socket);
-    socket.emit('data', "asdf");
+    socket.emit('id', this.state.programID);
   }
 
   render(){
@@ -78,10 +81,16 @@ class CodeEditor extends React.Component{
             fontSize: 12,
           }}
         />
-        <Button variant="contained" onClick={this.compile}>Run</Button>
-        <Button variant="contained" onClick={this.ping}>Ping Server</Button>
-        <p>{this.state.greeting}</p>
-        <Terminal submit={(input)=>{return "1233";}}/>
+        <Button variant="contained" onClick={this.compile}>Compile</Button>
+        <Button variant="contained" onClick={this.ping}>Run Program</Button>
+        <br></br>
+        <TextField label="Program ID" onChange={this.handleChange} value={this.state.programID}></TextField>
+        <p>{this.state.error}</p>
+        <Terminal socket={socket}
+          submit={(input)=>{
+            socket.emit('data', input); 
+            return input;
+          }}/>
       </Box>
     );
   }
