@@ -28,9 +28,10 @@ app.post('/api/compile', function (req, res) {
 
       exec(`cd BottomUp/ && cabal new-exec BottomUp ../compiled/${currentFile}/code.bgl ; cp Output* ../compiled/${currentFile}/ ;  cd ..`, (error, stdout, stderr) => {    
         //report errors
+        if (stdout) { res.send(JSON.stringify({ error: `stdout: ${stdout}` })); return; }
         if (error) { res.send(JSON.stringify({ error: `error: ${error.message}` })); return; }
         if (stderr) { res.send(JSON.stringify({ error: `stderr: ${stderr}` })); return; }
-        if (stdout) { res.send(JSON.stringify({ error: `stdout: ${stdout}` })); return; }
+
 
         res.status(201).send(JSON.stringify({ programID:`${currentFile}` }));
       });
