@@ -18,7 +18,7 @@ initialBoard : Board
 initialBoard ! (x, y) = Empty
 `;
 
-var socket = io();
+var socket = io("http://localhost:3001");
 
 class CodeEditor extends React.Component{
 
@@ -40,7 +40,7 @@ class CodeEditor extends React.Component{
     this.handleChange = this.handleChange.bind(this);
 
     socket.on("disconnect", () => {
-      socket.connect({forceNew: true});
+      socket.connect("http://localhost:3001", {forceNew: true});
     });
   }
 
