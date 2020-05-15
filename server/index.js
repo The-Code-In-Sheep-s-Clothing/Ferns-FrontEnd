@@ -50,19 +50,19 @@ app.post('/api/compile', function (req, res) {
     
     if(!fs.existsSync(`compiled/${currentFile}`)){
       fs.mkdir(`compiled/${currentFile}`, (err) => {
-        if (err) {res.send(JSON.stringify({ programID:`${currentFile}`, error: `error: ${err}` })); return;};
+        if (err) {res.status(400).send(JSON.stringify({ programID:`${currentFile}`, error: `error: ${err}` })); return;};
       });
     }
 
     fs.writeFile(`compiled/${currentFile}/code.bgl`, req.body.code, function (err) {
-      if (err) { res.send(JSON.stringify({ programID:`${currentFile}`, error: `error: ${err}` })); return; }
+      if (err) { res.status(400).send(JSON.stringify({ programID:`${currentFile}`, error: `error: ${err}` })); return; }
     }); 
 
     exec(`cd BottomUp/ && cabal new-exec BottomUp ../compiled/${currentFile}/code.bgl ; cp Output* ../compiled/${currentFile}/ ;  cd ..`, (error, stdout, stderr) => {    
       //report errors
-      if (stdout) { res.send(JSON.stringify({ programID:`${currentFile}`, error: `stdout: ${stdout}` })); return; }
-      if (error) { res.send(JSON.stringify({ programID:`${currentFile}`, error: `error: ${error.message}` })); return; }
-      if (stderr) { res.send(JSON.stringify({ programID:`${currentFile}`, error: `stderr: ${stderr}` })); return; }
+      if (stdout) { res.status(400).send(JSON.stringify({ programID:`${currentFile}`, error: `stdout: ${stdout}` })); return; }
+      if (error) { res.status(400).send(JSON.stringify({ programID:`${currentFile}`, error: `error: ${error.message}` })); return; }
+      if (stderr) { res.status(400).send(JSON.stringify({ programID:`${currentFile}`, error: `stderr: ${stderr}` })); return; }
 
 
       res.status(201).send(JSON.stringify({ programID:`${currentFile}` }));
