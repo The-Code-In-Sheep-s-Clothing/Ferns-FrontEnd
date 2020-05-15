@@ -27,6 +27,7 @@ class CodeEditor extends React.Component{
 
     this.compile = this.compile.bind(this);
     this.ping = this.ping.bind(this);
+    this.loadcode = this.loadcode.bind(this);
 
     this.terminalRef = React.createRef();
 
@@ -52,12 +53,30 @@ class CodeEditor extends React.Component{
                   'Accept': 'application/json, text/plain, */*',
                   'Content-Type': 'application/json' 
                 },
-      body: JSON.stringify({ code: this.state.code })
+      body: JSON.stringify({ code: this.state.code, id: this.state.programID })
     })
         .then(response => response.json())
         .then(data => {
           this.setState(data);
+          console.log(data);
         });
+  }
+
+  loadcode() {
+        // Simple POST request with a JSON body using fetch
+        fetch('/api/code', {
+          method: 'POST',
+          headers:  {  
+                      'Accept': 'application/json, text/plain, */*',
+                      'Content-Type': 'application/json' 
+                    },
+          body: JSON.stringify({ id: this.state.programID })
+        })
+            .then(response => response.json())
+            .then(data => {
+              this.setState(data);
+              console.log(data);
+            });
   }
 
   handleChange(event) {
@@ -81,7 +100,8 @@ class CodeEditor extends React.Component{
             fontSize: 12,
           }}
         />
-        <Button variant="contained" onClick={this.compile}>Compile</Button>
+        <Button variant="contained" onClick={this.loadcode}>Load</Button>
+        <Button variant="contained" onClick={this.compile}>Save and Compile</Button>
         <Button variant="contained" onClick={this.ping}>Run Program</Button>
         <br></br>
         <TextField label="Program ID" onChange={this.handleChange} value={this.state.programID}></TextField>

@@ -12,33 +12,64 @@ app.use(pino);
 var http = require('http').createServer(app);
 var io = require('socket.io')(http);
 
+app.post('/api/code', function(req, res){
+  if(req.body && req.body.id){
+      //check if id is valid
+      let currentFile = req.body.id;
+      if(currentFile == "" || !fs.existsSync(`compiled/${currentFile}/code.bgl`)){
+        res.status(400).send({
+          error: "ID does not exist: " + JSON.stringify(req.body.id)
+        });
+        return;
+      }
+
+      fs.readFile(`compiled/${currentFile}/code.bgl`, (err, data) => {
+        if (err) {
+          res.status(400).send({
+            error: err.toString()
+          });
+          return;
+        }
+        res.status(201).send(JSON.stringify({ code: data.toString() }));
+      });
+  }
+  else{
+    res.status(400).send({
+      error: "ID does not exist: " + JSON.stringify(req.body.id)
+    });
+  }
+});
 
 // POST method route
 app.post('/api/compile', function (req, res) {
   if (req.body && req.body.code) {
     let currentFile = shortid.generate();
-    exec(`mkdir compiled/${currentFile}`, (error, stdout, stderr) => {
-      //report errors
-      if (error) { res.send(JSON.stringify({ error: `error: ${error.message}` })); return; }
-      if (stderr) { res.send(JSON.stringify({ error: `stderr: ${stderr}` })); return; }
-
-      fs.writeFile(`compiled/${currentFile}/code.bgl`, req.body.code, function (err) {
-        if (err) { res.send(JSON.stringify({ error: `error: ${err}` })); return; }
-      }); 
-
-      exec(`cd BottomUp/ && cabal new-exec BottomUp ../compiled/${currentFile}/code.bgl ; cp Output* ../compiled/${currentFile}/ ;  cd ..`, (error, stdout, stderr) => {    
-        //report errors
-        if (stdout) { res.send(JSON.stringify({ error: `stdout: ${stdout}` })); return; }
-        if (error) { res.send(JSON.stringify({ error: `error: ${error.message}` })); return; }
-        if (stderr) { res.send(JSON.stringify({ error: `stderr: ${stderr}` })); return; }
-
-
-        res.status(201).send(JSON.stringify({ programID:`${currentFile}` }));
+    if(req.body.id && /^[a-z0-9]$/.test(req.body.id)){
+      currentFile = req.body.id;
+    }
+    
+    if(!fs.existsSync(`compiled/${currentFile}`)){
+      fs.mkdir(`compiled/${currentFile}`, (err) => {
+        if (err) {res.send(JSON.stringify({ programID:`${currentFile}`, error: `error: ${err}` })); return;};
       });
+    }
+
+    fs.writeFile(`compiled/${currentFile}/code.bgl`, req.body.code, function (err) {
+      if (err) { res.send(JSON.stringify({ programID:`${currentFile}`, error: `error: ${err}` })); return; }
+    }); 
+
+    exec(`cd BottomUp/ && cabal new-exec BottomUp ../compiled/${currentFile}/code.bgl ; cp Output* ../compiled/${currentFile}/ ;  cd ..`, (error, stdout, stderr) => {    
+      //report errors
+      if (stdout) { res.send(JSON.stringify({ programID:`${currentFile}`, error: `stdout: ${stdout}` })); return; }
+      if (error) { res.send(JSON.stringify({ programID:`${currentFile}`, error: `error: ${error.message}` })); return; }
+      if (stderr) { res.send(JSON.stringify({ programID:`${currentFile}`, error: `stderr: ${stderr}` })); return; }
+
+
+      res.status(201).send(JSON.stringify({ programID:`${currentFile}` }));
     });
   } else {
     res.status(400).send({
-      error: "Missing code body" + JSON.stringify(req.body)
+      error: "Empty request body" + JSON.stringify(req.body)
     });
   }
 });
