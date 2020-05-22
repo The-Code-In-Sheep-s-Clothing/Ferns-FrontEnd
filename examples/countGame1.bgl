@@ -1,0 +1,44 @@
+--tests builtins
+--game ends when board is full, whoever has more of their pieces in any row or column wins
+type Board = Array(3,3) of Player & { Empty }
+type Input = Position
+
+loop : (Board,Player) -> (Board,Player)
+loop(b,p) = while not(gameOver(b,p)) do tryMove(b,p)
+
+-- Game over function !
+gameOver : (Board ,Player) -> Bool 
+gameOver(b,p) = isFull(b)
+
+outcome : (Board,Player) -> Player & {Tie}
+outcome(b,p) = if (maxCount(b, A) > maxCount(b, B)) 
+		then A else if (maxCount(b, B) > maxCount(b, A)) then B else Tie
+
+maxCount : (Board, Player) -> Int
+maxCount(b, p) = maxInt(colCount(b, p, 3), rowCount(b,p,3))
+
+rowCount : (Board, Player, Int) -> Int
+rowCount(b, p, row) = if row == 0 then 0 else maxInt(countRow(b, p, row), rowCount(b, p, row-1))
+
+colCount : (Board, Player, Int) -> Int
+colCount(b, p, col) = if col == 0 then 0 else maxInt(countColumn(b, p, col), colCount(b, p, col-1))
+
+--colCount : (Board, Player, Int) -> Int
+--colCount(b, p, col) = if col == 0 then 0 else maxInt(countCol(b, p, col), colCount(b, p, col-1))
+
+--countCol : (Board, Player, Int) -> Int
+--countCol (b, c, y) = countColHelp(b, 3, y, c)
+
+--countColHelp : (Board, Int, Int, Player) -> Int
+--countColHelp(b, x, y, c) = if x == 0 then 0 
+                                --  else if (b!(x,y) == c) then 1 + countColHelp(b, (x-1), y, c)
+                                --  else 0  + countColHelp(b, (x-1), y, c)
+
+maxInt : (Int, Int) -> Int
+maxInt(a, b) = if (a < b) then b else a
+
+play : (Board,Player) -> Player & { Tie }
+play(a,b) = outcome(loop(a,b))
+
+result : Player & { Tie }
+result = play(initialBoard,goFirst)

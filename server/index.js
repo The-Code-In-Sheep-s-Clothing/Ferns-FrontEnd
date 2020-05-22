@@ -5,6 +5,7 @@ const pino = require('express-pino-logger')();
 var fs = require('fs');
 const shortid = require('shortid');
 shortid.seed(1476245624);
+shortid.characters('0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ-_');
 const app = express();
 app.use(bodyParser.json());
 app.use(pino);
@@ -12,9 +13,55 @@ app.use(pino);
 var http = require('http').createServer(app);
 var io = require('socket.io')(http);
 
+function alphanumericTest(str){
+  return /^[a-z0-9\-\_]*$/.test(str);
+}
+
+app.get('/api/example/:code', function(req, res){
+  if(!alphanumericTest(req.params.code)){
+    res.status(400).send({
+      error: "Illigal Chararacter in Sequence"
+    });
+    return;
+  }
+  fs.readFile('examples/' + req.params.code + '.bgl', (err, data) => {
+      if(err){
+        res.status(400).send({
+          error: "Example does not exist"
+        });
+      }
+      else{
+        const code = data;
+        res.status(200).send({code: code.toString()});
+      }
+  });
+});
+
+app.get('/api/examples/', function(req, res){
+  fs.readdir('examples/', function (err, files) {
+    //handling error
+    if (err) {
+      res.status(400).send({
+        error: "Error, please try again later"
+      });
+    } 
+    //listing all files using forEach
+    res.status(201).send(JSON.stringify({ files: files.map(f => {
+      const data = fs.readFileSync('examples/' + f)
+      return {name: f.slice(0, -4), code: data.toString()}
+    })}));
+});
+});
+
 app.post('/api/code', function(req, res){
   if(req.body && req.body.id){
       //check if id is valid
+      if(!alphanumericTest(req.body.id)){
+        res.status(400).send({
+          error: "Illigal Chararacter in Sequence"
+        });
+        return;
+      }
       let currentFile = req.body.id;
       if(currentFile == "" || !fs.existsSync(`compiled/${currentFile}/code.bgl`)){
         res.status(400).send({
@@ -44,7 +91,7 @@ app.post('/api/code', function(req, res){
 app.post('/api/compile', function (req, res) {
   if (req.body && req.body.code) {
     let currentFile = shortid.generate();
-    if(req.body.id && /^[a-z0-9]$/.test(req.body.id)){
+    if(req.body.id && alphanumericTest(req.body.id)){
       currentFile = req.body.id;
     }
     

@@ -26,7 +26,9 @@ class App extends React.Component{
           <Bar></Bar>
           <Container maxWidth='xl'>
             <Switch>
-              <Route path="/editor">
+              <Route path="/editor/:code" component={CodeEditor}>
+              </Route>
+              <Route path="/editor" >
                 <CodeEditor/>
               </Route>
               <Route path="/documentation">

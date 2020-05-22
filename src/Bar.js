@@ -28,22 +28,22 @@ class Bar extends React.Component{
             <div>
                 <div style={this.parent}>
                     <div style={this.child}>
-                        <Button variant="contained" color="primary" href="editor">
+                        <Button variant="contained" color="primary" href="/editor">
                             Editor
                         </Button>
                     </div>
                     <div style={this.child}>
-                        <Button variant="contained" color="primary" href="documentation">
+                        <Button variant="contained" color="primary" href="/documentation">
                             Documentation
                         </Button>
                     </div>
                     <div style={this.child}>
-                        <Button variant="contained" color="primary" href="examples">
+                        <Button variant="contained" color="primary" href="/examples">
                             Examples
                         </Button>
                     </div>
                     <div style={this.child}>
-                        <Button variant="contained" color="primary" href="contact">
+                        <Button variant="contained" color="primary" href="/contact">
                             Contact
                         </Button>
                     </div>

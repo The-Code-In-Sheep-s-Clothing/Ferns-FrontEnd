@@ -1,0 +1,24 @@
+type Board = Array(3,3) of Player & { Empty }
+type Input = Position
+
+threeInARow : Board -> Bool
+threeInARow(b) = or(inARow(3,A,b),inARow(3,B,b))
+
+loop : (Board,Player) -> (Board,Player)
+loop(b,p) = while not(gameOver(b,p)) do tryMove(b,p)
+
+-- Game over function !
+gameOver : (Board ,Player) -> Bool 
+gameOver(b,p) = or(threeInARow(b),isFull(b))
+
+
+outcome : (Board,Player) -> Player & {Tie}
+outcome(b,p) = if inARow(3,A,b) then A else
+               if inARow(3,B,b) then B else
+               Tie
+
+play : (Board,Player) -> Player & { Tie }
+play(a,b) = outcome(loop(a,b))
+
+result : Player & { Tie }
+result = play(initialBoard,goFirst)

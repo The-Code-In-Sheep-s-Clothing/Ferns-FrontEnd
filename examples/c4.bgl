@@ -1,0 +1,31 @@
+type Board = Array(6,7) of Player & { Empty }
+type WhyGod = Int
+ 
+col2pos : (Board,(Int,Int)) -> Position
+col2pos(b,(x,c)) = (1+countColumn(b,A,c)+countColumn(b,B,c),c)
+ 
+fourInARow : Board -> Bool
+fourInARow(b) = or(inARow(4,A,b),inARow(4,B,b))
+ 
+loop : (Board,Player) -> (Board,Player)
+loop(b,p) = while not(gameOver(b,p)) do try(b,p)
+ 
+-- Game over function !
+gameOver : (Board ,Player) -> Bool
+gameOver(b,p) = or(fourInARow(b),isFull(b))
+ 
+outcome : (Board,Player) -> Player & {Tie}
+outcome(b,p) = if inARow(4,A,b) then A else
+               if inARow(4,B,b) then B else
+               Tie
+ 
+try : (Board, Player) -> (Board, Player)
+try(b,p) = let pos = col2pos(b,input) in
+                   if isValid(b,pos) then (place(next(p),b,pos),next(p))
+                                     else (b,p)
+ 
+play : (Board,Player) -> Player & { Tie }
+play(a,b) = outcome(loop(a,b))
+ 
+result : Player & { Tie }
+result = play(initialBoard,goFirst)

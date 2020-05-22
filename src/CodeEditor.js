@@ -11,12 +11,7 @@ import { Button, Box, TextField } from '@material-ui/core';
 import Terminal from './Terminal.js';
 import io from "socket.io-client";
 
-const code = `type Board = Array(3,3) of Player & { Empty }
-type Input = Position
-
-initialBoard : Board
-initialBoard ! (x, y) = Empty
-`;
+var code = '-- Start working on the board game here!';
 
 var socket = io();
 
@@ -31,12 +26,24 @@ class CodeEditor extends React.Component{
 
     this.terminalRef = React.createRef();
 
-
     this.state = {
       code: code,
       error: '',
       programID: ''
     };
+
+    if(this.props?.match?.params?.code){
+      fetch('/api/example/' + this.props.match.params.code)
+        .then(response => response.json())
+        .then(data => this.setState(data));
+    }
+    else if(this.props.code){
+      fetch('/api/example/' + this.props.code)
+        .then(response => response.json())
+        .then(data => this.setState(data));
+    }
+  
+    
 
     this.handleChange = this.handleChange.bind(this);
 

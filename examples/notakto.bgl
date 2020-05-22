@@ -1,0 +1,25 @@
+  
+type Board = Array(3,3) of Player & { Empty }
+type Input = Position
+
+threeInARow : Board -> Bool
+threeInARow(b) = inARow(3,A,b)
+
+loop : (Board,Player) -> (Board,Player)
+loop(b,p) = while not(gameOver(b,p)) do try(b,p)
+
+try : (Board, Player) -> (Board, Player)
+try(b,p) = tryMove(b, A)
+
+-- Game over function !
+gameOver : (Board ,Player) -> Bool 
+gameOver(b,p) = or(threeInARow(b),isFull(b))
+
+outcome : (Board,Player) -> Player
+outcome(b,p) = if evenPiece(b) then B else A
+
+play : (Board,Player) -> Player 
+play(a,b) = outcome(loop(a,b))
+
+result : Player
+result = play(initialBoard,goFirst)
